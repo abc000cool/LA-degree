@@ -1,0 +1,16 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "LA Degree Percentage",
+    "section": "",
+    "text": "The data shown here represent the estimated percentage of adults aged 25 and older who have attained at least a bachelor’s degree in each county across California, based on the 2020 American Community Survey (ACS) 5-year estimates. This data was retrieved using the tidycensus package, which provides direct access to U.S. Census Bureau datasets through their API.\nThe total population considered includes all individuals aged 25 and older (B15003_001), while the population with a bachelor’s degree (B15003_022) is used to compute the percentage. This metric is often used to assess the educational attainment level of regions and is closely tied to workforce readiness, income potential, and regional development.\nCounties such as Santa Clara, San Francisco, and Marin consistently show higher proportions of bachelor’s degree holders, likely reflecting the strong presence of technology, academic, and professional sectors. In contrast, more rural or agricultural counties tend to have lower percentages, pointing toward regional disparities in access to higher education and job market composition.\nThis visualization helps highlight geographic inequality in educational attainment, and it can serve as a foundation for deeper research into its causes — including economic opportunity, access to colleges, public education funding, and demographic patterns."
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this site"
+  }
+]

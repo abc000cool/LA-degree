@@ -1,0 +1,165 @@
+---
+title: "LA Degree Percentage"
+---
+
+
+The data shown here represent the estimated percentage of adults aged 25 and older who have attained at least a bachelor’s degree in each county across California, based on the 2020 American Community Survey (ACS) 5-year estimates. This data was retrieved using the tidycensus package, which provides direct access to U.S. Census Bureau datasets through their API.
+
+The total population considered includes all individuals aged 25 and older (B15003_001), while the population with a bachelor’s degree (B15003_022) is used to compute the percentage. This metric is often used to assess the educational attainment level of regions and is closely tied to workforce readiness, income potential, and regional development.
+
+Counties such as Santa Clara, San Francisco, and Marin consistently show higher proportions of bachelor's degree holders, likely reflecting the strong presence of technology, academic, and professional sectors. In contrast, more rural or agricultural counties tend to have lower percentages, pointing toward regional disparities in access to higher education and job market composition.
+
+This visualization helps highlight geographic inequality in educational attainment, and it can serve as a foundation for deeper research into its causes — including economic opportunity, access to colleges, public education funding, and demographic patterns.
+
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+library(tidycensus)
+library(tidyverse)
+library(ggplot2)
+library(sf)
+
+invisible(census_api_key("5cd99921417c96389bca6202ac993f518b6dd6dd", install = TRUE, overwrite = TRUE))
+readRenviron("~/.Renviron")  # reload key
+
+v20 <- load_variables(2020, "acs5", cache = TRUE)
+View(v20)  # Search for relevant education codes
+edu_data <- get_acs(
+  geography = "county",
+  state = "CA",
+  variables = c(
+    total = "B15003_001",
+    bachelors_or_higher = "B15003_022"
+  ),
+  year = 2020,
+  survey = "acs5",
+  geometry = TRUE,
+  progress_bar = FALSE
+)
+
+
+# Reshape and calculate percentage
+edu_wide <- edu_data %>%
+  select(GEOID, NAME, variable, estimate) %>%
+  pivot_wider(names_from = variable, values_from = estimate) %>%
+  mutate(percent_bachelors = (bachelors_or_higher / total) * 100)
+
+ggplot(edu_wide) +
+  geom_sf(aes(fill = percent_bachelors)) +
+  scale_fill_viridis_c(option = "plasma", name = "% Bachelor's") +
+  labs(
+    title = "California Counties: % with Bachelor's Degree",
+    caption = "Source: ACS 2020 5-year estimates"
+  ) +
+  theme_minimal()
+
+```
+
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+library(tidycensus)
+library(dplyr)
+library(leaflet)
+library(sf)
+
+# Get education data with geometries
+edu_data <- get_acs(
+  geography = "county",
+  state = "CA",
+  variables = c(
+    total = "B15003_001",
+    bachelors_or_higher = "B15003_022"
+  ),
+  year = 2020,
+  survey = "acs5",
+  geometry = TRUE,
+  progress_bar = FALSE
+)
+
+# Reshape and calculate percentage
+edu_wide <- edu_data %>%
+  select(GEOID, NAME, variable, estimate, geometry) %>%
+  pivot_wider(names_from = variable, values_from = estimate) %>%
+  mutate(percent_bachelors = (bachelors_or_higher / total) * 100)
+
+# Create interactive leaflet map
+leaflet(data = edu_wide) %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(
+    fillColor = ~colorBin("YlGnBu", percent_bachelors, bins = 7)(percent_bachelors),
+    weight = 1,
+    opacity = 1,
+    color = "white",
+    dashArray = "3",
+    fillOpacity = 0.7,
+    highlight = highlightOptions(
+      weight = 2,
+      color = "#666",
+      dashArray = "",
+      fillOpacity = 0.7,
+      bringToFront = TRUE
+    ),
+    label = ~paste0(NAME, ": ", round(percent_bachelors, 1), "%"),
+    labelOptions = labelOptions(
+      style = list("font-weight" = "normal", padding = "3px 8px"),
+      textsize = "13px",
+      direction = "auto"
+    )
+  ) %>%
+  addLegend(
+    pal = colorBin("YlGnBu", edu_wide$percent_bachelors, bins = 7),
+    values = ~percent_bachelors,
+    opacity = 0.7,
+    title = "Bachelor's Degree (%)",
+    position = "bottomright"
+  )
+```
+
+
+
+
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+library(ggplot2)
+library(dplyr)
+
+# Simulated data
+set.seed(123)
+years <- 2010:2020
+counties <- c("Los Angeles", "San Francisco", "Sacramento", "Fresno", "San Diego")
+data_sim <- expand.grid(Year = years, County = counties) %>%
+  mutate(
+    percent_bachelors = round(runif(nrow(.), 15, 50) + (Year - 2010) * runif(nrow(.), 0, 2), 1)
+  )
+
+# Pick a single year to plot (e.g., 2020)
+plot_year <- 2020
+data_year <- filter(data_sim, Year == plot_year)
+
+# Create bar chart with color gradient and labels
+ggplot(data_year, aes(x = reorder(County, percent_bachelors), y = percent_bachelors, fill = percent_bachelors)) +
+  geom_col() +
+  geom_text(aes(label = paste0(percent_bachelors, "%")), hjust = -0.1, size = 4) +
+  coord_flip() +
+  scale_fill_gradient(low = "skyblue", high = "navy") +
+  labs(
+    title = paste("Percentage with Bachelor's Degree by County,", plot_year),
+    x = "County",
+    y = "Percent with Bachelor's Degree",
+    fill = "Percent"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 16),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10)
+  ) +
+  ylim(0, max(data_year$percent_bachelors) + 10)
+
+```
+

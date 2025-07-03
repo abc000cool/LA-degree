@@ -1,0 +1,5 @@
+---
+title: "About"
+---
+
+This website was made as a part of David Kane's Data Science Bootcamp
